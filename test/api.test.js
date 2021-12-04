@@ -65,6 +65,7 @@ test("only merge PRs with required approvals", async () => {
 
   merged = false;
   octokit.paginate.mockReturnValueOnce([
+    { state: "CHANGES_REQUESTED", user: { login: "approval_user" } },
     { state: "APPROVED", user: { login: "approval_user" } },
     { state: "APPROVED", user: { login: "approval_user2" } }
   ]);
@@ -82,4 +83,17 @@ test("only merge PRs with required approvals", async () => {
   // WHEN a user has given
   await api.executeGitHubAction({ config, octokit }, "check_suite", event);
   expect(merged).toEqual(false); // if there are only two approvals from the same user, it should fail
+
+  merged = false;
+  octokit.pulls.listReviews.mockReturnValueOnce({
+    data: [
+      { id: 1, state: "APPROVED", user: { id: 123 } },
+      { id: 2, state: "CHANGES_REQUESTED", user: { id: 123 } },
+      { id: 3, state: "APPROVED", user: { id: 124 } }
+    ]
+  });
+
+  // WHEN
+  await api.executeGitHubAction({ config, octokit }, "check_suite", event);
+  expect(merged).toEqual(false); // if there are two approvals but a change request afterwards, it should fail
 });
