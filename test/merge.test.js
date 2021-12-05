@@ -62,7 +62,7 @@ test("MERGE_COMMIT_MESSAGE_REGEX can be used to cut PR body", async () => {
   expect(octokit.pulls.merge).toHaveBeenCalledWith(
     expect.objectContaining({
       commit_title:
-        "Update README\n\nThis is the meaty part of the PR body.\nIt also matches newlines.",
+        "Update README (#1)\n\nThis is the meaty part of the PR body.\nIt also matches newlines.",
       commit_message: "",
       pull_number: 1,
       repo: "repository",
