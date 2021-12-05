@@ -38,6 +38,38 @@ test("MERGE_COMMIT_MESSAGE with nested custom fields", async () => {
   );
 });
 
+test("MERGE_COMMIT_MESSAGE with other nested custom fields", async () => {
+  // GIVEN
+  const pr = pullRequest();
+  pr.body = [
+    "This is the meaty part of the PR body.",
+    "It also matches newlines.",
+    "",
+    "And more content."
+  ].join("\n")
+  pr.title = "This is the PR's title";
+  pr.user = { login: "author" };
+
+  const config = createConfig({
+    MERGE_COMMIT_MESSAGE: "{pullRequest.title} (#{pullRequest.number})\n\n{pullRequest.body}"
+  });
+
+  // WHEN
+  expect(await merge({ config, octokit }, pr, 0)).toEqual(true);
+
+  // THEN
+  expect(octokit.pulls.merge).toHaveBeenCalledWith(
+    expect.objectContaining({
+      commit_title:
+        "This is the PR's title (#1)\n\nThis is the meaty part of the PR body.\nIt also matches newlines.\n\nAnd more content.",
+      commit_message: "",
+      pull_number: 1,
+      repo: "repository",
+      sha: "2c3b4d5"
+    })
+  );
+});
+
 test("MERGE_COMMIT_MESSAGE_REGEX can be used to cut PR body", async () => {
   // GIVEN
   const pr = pullRequest();
